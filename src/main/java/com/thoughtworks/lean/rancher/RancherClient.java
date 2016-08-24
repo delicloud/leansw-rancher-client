@@ -19,8 +19,6 @@ public interface RancherClient {
 
     ServiceInstance setInstanceLabels(String projectId, String instanceId, Map<String, String> labelsKV);
 
-    ServicesResponse servicesByProjectName(String projectName);
-
     EnvironmentResponse environmentsByProjectName(String projectName);
 
     EnvironmentInfo environmentInfoByName(String projectName, String environmentName);

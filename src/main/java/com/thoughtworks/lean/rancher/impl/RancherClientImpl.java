@@ -63,15 +63,6 @@ public class RancherClientImpl implements RancherClient {
     }
 
     @Override
-    public ServicesResponse servicesByProjectName(String projectName) {
-        ProjectInfo projectInfo = projectByName(projectName);
-        HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
-        final String requestUrl = String.format("%s/v1/projects/%s/services", rancherUrl, projectInfo.getId());
-        ResponseEntity<ServicesResponse> response = this.restTemplate.exchange(requestUrl, GET, request, ServicesResponse.class);
-        return response.getBody();
-    }
-
-    @Override
     public EnvironmentResponse environmentsByProjectName(String projectName) {
         ProjectInfo projectInfo = projectByName(projectName);
         HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
@@ -104,7 +95,6 @@ public class RancherClientImpl implements RancherClient {
         ResponseEntity<ServicesResponse> response = this.restTemplate.exchange(requestUrl, GET, request, ServicesResponse.class);
         return response.getBody().getData().stream().findFirst().orElse(null);
     }
-
 
     @Override
     public ServiceInfo serviceScaleChange(ServiceInfo serviceInfo, int scale) {

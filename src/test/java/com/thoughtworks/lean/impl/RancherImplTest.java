@@ -36,13 +36,6 @@ public class RancherImplTest {
     }
 
     @Test
-    public void should_get_services_by_project_name() {
-        String projectName = "Default";
-        ServicesResponse services = rancherClient.servicesByProjectName(projectName);
-        assertTrue(services.getData().size() > 0);
-    }
-
-    @Test
     public void should_get_project_by_name() {
         String projectName = "Default";
         ProjectInfo projectInfo = rancherClient.projectByName(projectName);
@@ -88,6 +81,15 @@ public class RancherImplTest {
         }
         assertTrue(response.getData().size() > 0);
 
+    }
+
+    @Test
+    public void should_get_service_info_by_name() {
+        String projectName = "Default";
+        String serviceName = "go-agent16-2-1-java8";
+        ServiceInfo serviceInfo = rancherClient.serviceInfoByName(projectName, serviceName);
+        assertNotNull(serviceInfo);
+        assertEquals(serviceName, serviceInfo.getName());
     }
 
 }
