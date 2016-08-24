@@ -98,10 +98,11 @@ public class RancherClientImpl implements RancherClient {
 
     @Override
     public ServiceInfo serviceInfoByName(String projectName, String serviceName) {
-        ServicesResponse servicesResponse = servicesByProjectName(projectName);
-        return servicesResponse.getData().stream()
-                .filter(serviceInfo -> serviceInfo.getName().equals(serviceName))
-                .findFirst().orElseGet(null);
+        ProjectInfo projectInfo = projectByName(projectName);
+        HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
+        final String requestUrl = String.format("%s/v1/projects/%s/services?name=%s", rancherUrl, projectInfo.getId(), serviceName);
+        ResponseEntity<ServicesResponse> response = this.restTemplate.exchange(requestUrl, GET, request, ServicesResponse.class);
+        return response.getBody().getData().stream().findFirst().orElse(null);
     }
 
 
