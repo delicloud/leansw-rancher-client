@@ -17,11 +17,6 @@
     </parent>
 
 
-    <properties>
-        <java.version>1.8</java.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <scm>
         <url>https://github.com/tw-leansw/leansw-sonar-client</url>
         <connection>scm:git:git://github.com:tw-leansw/leansw-rancher-client.git</connection>
