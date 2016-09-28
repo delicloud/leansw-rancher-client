@@ -3,7 +3,7 @@
 
   <groupId>com.thoughtworks.lean</groupId>
   <artifactId>leansw-rancher-client</artifactId>
-  <version>1.3-SNAPSHOT</version>
+  <version>1.2</version>
   <packaging>jar</packaging>
 
   <name>leansw-rancher-client</name>
@@ -128,12 +128,12 @@
 
   <distributionManagement>
     <snapshotRepository>
-      <id>nexus-snapshots</id>
-      <url>http://nexus.server:9091/content/repositories/snapshots/</url>
+      <id>libs-snapshot-local</id>
+      <url>http://artifactory.dev.twleansw.com:8081/artifactory/libs-snapshot-local</url>
     </snapshotRepository>
     <repository>
-      <id>nexus-releases</id>
-      <url>http://nexus.server:9091/content/repositories/releases/</url>
+      <id>libs-release-local</id>
+      <url>http://artifactory.dev.twleansw.com:8081/artifactory/libs-release-local</url>
     </repository>
   </distributionManagement>
 
@@ -167,28 +167,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
         <version>2.7</version>
-        <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.sonatype.plugins</groupId>
-        <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.6.7</version>
-        <executions>
-          <execution>
-            <id>default-deploy</id>
-            <phase>deploy</phase>
-            <goals>
-              <goal>deploy</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <serverId>nexus</serverId>
-          <nexusUrl>http://nexus.server:9091/</nexusUrl>
-          <skipStaging>true</skipStaging>
-        </configuration>
       </plugin>
     </plugins>
   </build>

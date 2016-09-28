@@ -6,6 +6,7 @@ import com.thoughtworks.lean.rancher.RancherClient;
 import com.thoughtworks.lean.rancher.dto.*;
 import com.thoughtworks.lean.rancher.impl.RancherClientImpl;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertTrue;
@@ -17,9 +18,9 @@ public class RancherImplTest {
 
     @Before
     public void setup() {
-        rancherClient = new RancherClientImpl("http://rancher-server:8080/",
-                "14E81ABF45359F074521",
-                "E7xmHz2h22iJWUpf1atDEnqsd2zzv9udHdsQkjjy");
+        rancherClient = new RancherClientImpl("http://rancher.dev.twleansw.com:9080/",
+                "2B9B6D13870BF74B6E65",
+                "Bsk9o44zMUjAo7QawdXiK7mvRiGRTukTfDswDZSJ");
 
     }
 
@@ -51,18 +52,19 @@ public class RancherImplTest {
     }
 
     @Test
+    @Ignore
     public void should_get_environment_by_name() {
         String projectName = "Default";
-        String environmentName = "rancher-gocd-agents";
+        String environmentName = "leansw-gocd-agents";
         EnvironmentInfo environmentInfo = rancherClient.environmentInfoByName(projectName, environmentName);
         assertEquals(environmentInfo.getName(), environmentName);
-
     }
 
     @Test
+    @Ignore
     public void should_get_services_by_environment_name() {
         String projectName = "Default";
-        String environmentName = "rancher-gocd-agents";
+        String environmentName = "leansw-gocd-agents";
         ServicesResponse servicesResponse = rancherClient.servicesByEnvironmentName(projectName, environmentName);
         //assertTrue(servicesResponse.getData().size() > 0);
 
