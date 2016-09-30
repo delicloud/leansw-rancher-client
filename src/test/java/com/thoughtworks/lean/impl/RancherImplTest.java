@@ -71,6 +71,7 @@ public class RancherImplTest {
     }
 
     @Test
+    @Ignore
     public void should_get_service_instances_by_name() {
         String projectName = "Default";
         String serviceName = "go-agent16-2-1-java8";
@@ -86,6 +87,7 @@ public class RancherImplTest {
     }
 
     @Test
+    @Ignore
     public void should_get_service_info_by_name() {
         String projectName = "Default";
         String serviceName = "go-agent16-2-1-java8";
