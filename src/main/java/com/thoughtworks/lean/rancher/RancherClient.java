@@ -2,16 +2,17 @@ package com.thoughtworks.lean.rancher;
 
 import com.thoughtworks.lean.rancher.dto.*;
 
+import java.util.List;
 import java.util.Map;
 
 public interface RancherClient {
     ServiceInfo serviceInfoByName(String projectName, String serviceName);
 
-    ServiceInstancesResponse serviceInstances(String projectId, String serviceId);
+    List<ServiceInstance> serviceInstances(String projectId, String serviceId);
 
-    ServiceInstancesResponse serviceInstancesByName(String projectName, String serviceName);
+    List<ServiceInstance> serviceInstancesByName(String projectName, String serviceName);
 
-    ProjectsResponse projects();
+    List<ProjectInfo> projects();
 
     ProjectInfo projectByName(String projectName);
 
@@ -19,10 +20,10 @@ public interface RancherClient {
 
     ServiceInstance setInstanceLabels(String projectId, String instanceId, Map<String, String> labelsKV);
 
-    EnvironmentResponse environmentsByProjectName(String projectName);
+    List<EnvironmentInfo> environmentsByProjectName(String projectName);
 
     EnvironmentInfo environmentInfoByName(String projectName, String environmentName);
 
-    ServicesResponse servicesByEnvironmentName(String projectName, String environmentName);
+    List<ServiceInfo> servicesByEnvironmentName(String projectName, String environmentName);
 
 }

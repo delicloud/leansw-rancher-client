@@ -3,15 +3,18 @@ package com.thoughtworks.lean.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.lean.rancher.RancherClient;
-import com.thoughtworks.lean.rancher.dto.*;
+import com.thoughtworks.lean.rancher.dto.EnvironmentInfo;
+import com.thoughtworks.lean.rancher.dto.ProjectInfo;
+import com.thoughtworks.lean.rancher.dto.ServiceInfo;
+import com.thoughtworks.lean.rancher.dto.ServiceInstance;
 import com.thoughtworks.lean.rancher.impl.RancherClientImpl;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static junit.framework.TestCase.assertTrue;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
+import java.util.List;
+
+import static junit.framework.TestCase.*;
 
 public class RancherImplTest {
     RancherClient rancherClient;
@@ -28,12 +31,12 @@ public class RancherImplTest {
     public void should_return_projects() {
 
         // given
-        ProjectsResponse projects = rancherClient.projects();
+        List<ProjectInfo> projects = rancherClient.projects();
 
         // then
-        assertTrue(projects.getData().size() > 0);
-        assertNotNull(projects.getData().get(0).getId());
-        assertNotNull(projects.getData().get(0).getName());
+        assertTrue(projects.size() > 0);
+        assertNotNull(projects.get(0).getId());
+        assertNotNull(projects.get(0).getName());
     }
 
     @Test
@@ -64,8 +67,8 @@ public class RancherImplTest {
     @Ignore
     public void should_get_services_by_environment_name() {
         String projectName = "Default";
-        String environmentName = "leansw-gocd-agents";
-        ServicesResponse servicesResponse = rancherClient.servicesByEnvironmentName(projectName, environmentName);
+        String environmentName = "go-agent16-9-0-dind";
+        List<ServiceInfo> servicesResponse = rancherClient.servicesByEnvironmentName(projectName, environmentName);
         //assertTrue(servicesResponse.getData().size() > 0);
 
     }
@@ -74,15 +77,15 @@ public class RancherImplTest {
     @Ignore
     public void should_get_service_instances_by_name() {
         String projectName = "Default";
-        String serviceName = "go-agent16-2-1-java8";
+        String serviceName = "go-agent16-9-0-dind";
 
-        ServiceInstancesResponse response = rancherClient.serviceInstancesByName(projectName, serviceName);
+        List<ServiceInstance> response = rancherClient.serviceInstancesByName(projectName, serviceName);
         try {
             System.out.println(new ObjectMapper().writer().writeValueAsString(response));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        assertTrue(response.getData().size() > 0);
+        assertTrue(response.size() > 0);
 
     }
 
@@ -90,7 +93,7 @@ public class RancherImplTest {
     @Ignore
     public void should_get_service_info_by_name() {
         String projectName = "Default";
-        String serviceName = "go-agent16-2-1-java8";
+        String serviceName = "go-agent16-9-0-dind";
         ServiceInfo serviceInfo = rancherClient.serviceInfoByName(projectName, serviceName);
         assertNotNull(serviceInfo);
         assertEquals(serviceName, serviceInfo.getName());

@@ -5,6 +5,7 @@ import com.thoughtworks.lean.rancher.dto.*;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,6 +14,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.http.HttpMethod.GET;
@@ -20,9 +22,18 @@ import static org.springframework.http.HttpMethod.PUT;
 
 @Component
 public class RancherClientImpl implements RancherClient {
+    private final static String URL_PROJECT_ENVIRONMENTS = "%s/v1/projects/%s/environments";
+    private final static String URL_PROJECT_ENVIRONMENT_SERVICES = "%s/v1/projects/%s/environments/%s/services";
+    private final static String URL_PROJECT_SERVICES_BY_NAME = "%s/v1/projects/%s/services?name=%s";
+    private final static String URL_PROJECT_SERVICE = "%s/v1/projects/%s/services/%s";
+    private final static String URL_PROJECT_SERVICE_INSTANCES = "%s/v1/projects/%s/services/%s/instances";
+    private final static String URL_PROJECT_SERVICE_INSTANCE = "%s/v1/projects/%s/instances/%s";
+    private final static String URL_PROJECTS = "%s/v1/projects";
+
     private String accessSecret;
     private String secretKey;
     private String rancherUrl;
+
 
     private RestTemplate restTemplate;
     private int TIMEOUT = 5000;
@@ -44,17 +55,13 @@ public class RancherClientImpl implements RancherClient {
 
 
     @Override
-    public ProjectsResponse projects() {
-        HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
-        final String requestUrl = String.format("%s/v1/projects", rancherUrl);
-        ResponseEntity<ProjectsResponse> response = this.restTemplate.exchange(requestUrl, GET, request, ProjectsResponse.class);
-        return response.getBody();
+    public List<ProjectInfo> projects() {
+        return get(String.format(URL_PROJECTS, rancherUrl));
     }
 
     @Override
     public ProjectInfo projectByName(String projectName) {
-        ProjectsResponse projects = projects();
-        for (ProjectInfo projectInfo : projects.getData()) {
+        for (ProjectInfo projectInfo : projects()) {
             if (projectInfo.getName().equals(projectName)) {
                 return projectInfo;
             }
@@ -63,38 +70,40 @@ public class RancherClientImpl implements RancherClient {
     }
 
     @Override
-    public EnvironmentResponse environmentsByProjectName(String projectName) {
+    public List<EnvironmentInfo> environmentsByProjectName(String projectName) {
         ProjectInfo projectInfo = projectByName(projectName);
-        HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
-        final String requestUrl = String.format("%s/v1/projects/%s/environments", rancherUrl, projectInfo.getId());
-        ResponseEntity<EnvironmentResponse> response = this.restTemplate.exchange(requestUrl, GET, request, EnvironmentResponse.class);
-        return response.getBody();
+        return get(String.format(URL_PROJECT_ENVIRONMENTS, rancherUrl, projectInfo.getId()));
     }
 
     @Override
     public EnvironmentInfo environmentInfoByName(String projectName, String environmentName) {
-        return this.environmentsByProjectName(projectName)
-                .getEnvironmentByName(environmentName);
+        return this.environmentsByProjectName(projectName).stream()
+                .filter(environmentInfo -> environmentInfo.getName().equals(environmentName))
+                .findFirst().orElse(null);
     }
 
     @Override
-    public ServicesResponse servicesByEnvironmentName(String projectName, String environmentName) {
+    public List<ServiceInfo> servicesByEnvironmentName(String projectName, String environmentName) {
         ProjectInfo projectInfo = this.projectByName(projectName);
-        EnvironmentInfo environmentInfo = this.environmentInfoByName(projectName,environmentName);
-        HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
-        final String requestUrl = String.format("%s/v1/projects/%s/environments/%s/services", rancherUrl, projectInfo.getId(), environmentInfo.getId());
-        ResponseEntity<ServicesResponse> response = this.restTemplate.exchange(requestUrl, GET, request, ServicesResponse.class);
-        return response.getBody();
+        EnvironmentInfo environmentInfo = this.environmentInfoByName(projectName, environmentName);
+        return get(String.format(URL_PROJECT_ENVIRONMENT_SERVICES, rancherUrl, projectInfo.getId(), environmentInfo.getId()));
     }
+
+    private <T> T get(String url) {
+        HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
+        ResponseEntity<Response<T>> response = this.restTemplate.exchange(url, GET, request, new ParameterizedTypeReference<Response<T>>() {
+        });
+        return response.getBody().getData();
+    }
+
 
     @Override
     public ServiceInfo serviceInfoByName(String projectName, String serviceName) {
         ProjectInfo projectInfo = projectByName(projectName);
-        HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
-        final String requestUrl = String.format("%s/v1/projects/%s/services?name=%s", rancherUrl, projectInfo.getId(), serviceName);
-        ResponseEntity<ServicesResponse> response = this.restTemplate.exchange(requestUrl, GET, request, ServicesResponse.class);
-        return response.getBody().getData().stream().findFirst().orElse(null);
+        List<ServiceInfo> response = get(String.format(URL_PROJECT_SERVICES_BY_NAME, rancherUrl, projectInfo.getId(), serviceName));
+        return response.stream().findFirst().orElse(null);
     }
+
 
     @Override
     public ServiceInfo serviceScaleChange(ServiceInfo serviceInfo, int scale) {
@@ -108,9 +117,8 @@ public class RancherClientImpl implements RancherClient {
         //update Scale
         serviceUpdateRequest.setScale(scale > 1 ? scale : 1);
         //
-
         HttpEntity<ServiceUpdateRequest> request = new HttpEntity<>(serviceUpdateRequest, buildHttpHeaders());
-        final String requestUrl = String.format("%s/v1/projects/%s/services/%s", rancherUrl, serviceInfo.getAccountId(), serviceInfo.getId());
+        final String requestUrl = String.format(URL_PROJECT_SERVICE, rancherUrl, serviceInfo.getAccountId(), serviceInfo.getId());
         ResponseEntity<ServiceInfo> response = this.restTemplate.exchange(requestUrl, PUT, request, ServiceInfo.class);
         return response.getBody();
     }
@@ -119,6 +127,7 @@ public class RancherClientImpl implements RancherClient {
     public ServiceInstance setInstanceLabels(String projectId, String instanceId, Map<String, String> labelsKV) {
         return null;
     }
+
 
     private HttpHeaders buildHttpHeaders() {
         byte[] plainCredsBytes = (this.accessSecret + ":" + this.secretKey).getBytes();
@@ -133,15 +142,12 @@ public class RancherClientImpl implements RancherClient {
     }
 
     @Override
-    public ServiceInstancesResponse serviceInstances(String projectId, String serviceId) {
-        HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
-        final String requestUrl = String.format("%s/v1/projects/%s/services/%s/instances", rancherUrl, projectId, serviceId);
-        ResponseEntity<ServiceInstancesResponse> response = this.restTemplate.exchange(requestUrl, GET, request, ServiceInstancesResponse.class);
-        return response.getBody();
+    public List<ServiceInstance> serviceInstances(String projectId, String serviceId) {
+        return get(String.format(URL_PROJECT_SERVICE_INSTANCES, rancherUrl, projectId, serviceId));
     }
 
     @Override
-    public ServiceInstancesResponse serviceInstancesByName(String projectName, String serviceName) {
+    public List<ServiceInstance> serviceInstancesByName(String projectName, String serviceName) {
         ServiceInfo serviceInfo = this.serviceInfoByName(projectName, serviceName);
         return this.serviceInstances(serviceInfo.getAccountId(), serviceInfo.getId());
     }
