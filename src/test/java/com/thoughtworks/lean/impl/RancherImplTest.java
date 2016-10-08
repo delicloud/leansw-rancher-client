@@ -17,6 +17,10 @@ import java.util.List;
 import static junit.framework.TestCase.*;
 
 public class RancherImplTest {
+    public static final String STR_ENV_DEFAULT = "Default";
+    public static final String STR_STACK = "leansw-go-agents";
+    public static final String STR_SERVICE_NAME = "go-agent16-9-0-dind";
+    public static final String STR_CONTAINER_NAME = "go-agent16-9-0-dind";
     RancherClient rancherClient;
 
     @Before
@@ -41,45 +45,53 @@ public class RancherImplTest {
 
     @Test
     public void should_get_project_by_name() {
-        String projectName = "Default";
-        ProjectInfo projectInfo = rancherClient.projectByName(projectName);
-        assertEquals(projectInfo.getName(), projectName);
+        ProjectInfo projectInfo = rancherClient.projectByName(STR_ENV_DEFAULT);
+        assertEquals(projectInfo.getName(), STR_ENV_DEFAULT);
     }
 
     @Test
     public void should_get_service_by_name() {
-        String projectName = "Default";
         String serviceName = "gocd-server";
-        ServiceInfo serviceInfo = rancherClient.serviceInfoByName(projectName, serviceName);
+        ServiceInfo serviceInfo = rancherClient.serviceInfoByName(STR_ENV_DEFAULT, serviceName);
         assertEquals(serviceInfo.getName(), serviceName);
     }
 
     @Test
     @Ignore
     public void should_get_environment_by_name() {
-        String projectName = "Default";
-        String environmentName = "leansw-gocd-agents";
-        EnvironmentInfo environmentInfo = rancherClient.environmentInfoByName(projectName, environmentName);
+        String environmentName = "leansw-go-agents";
+        EnvironmentInfo environmentInfo = rancherClient.environmentInfoByName(STR_ENV_DEFAULT, environmentName);
         assertEquals(environmentInfo.getName(), environmentName);
     }
 
     @Test
     @Ignore
     public void should_get_services_by_environment_name() {
-        String projectName = "Default";
-        String environmentName = "go-agent16-9-0-dind";
-        List<ServiceInfo> servicesResponse = rancherClient.servicesByEnvironmentName(projectName, environmentName);
-        //assertTrue(servicesResponse.getData().size() > 0);
+        List<ServiceInfo> servicesResponse = rancherClient.servicesByEnvironmentName(STR_ENV_DEFAULT, STR_STACK);
+        assertTrue(servicesResponse.size() > 0);
 
+    }
+
+
+    @Test
+    @Ignore
+    public void should_get_instance() {
+        ServiceInstance instance = rancherClient.instance(STR_ENV_DEFAULT, STR_SERVICE_NAME, STR_CONTAINER_NAME, 1);
+        assertNotNull(instance);
+        assertEquals(instance.getName(), "leansw-go-agents_go-agent16-9-0-dind_1");
+    }
+
+    @Test
+    @Ignore
+    public void should_get_instance_by_external_id_prefix() {
+        List<ServiceInstance> instances = rancherClient.instanceByExtPrefix(STR_ENV_DEFAULT, STR_SERVICE_NAME, "7a142dc0370c");
+        assertTrue(instances.size() > 0);
     }
 
     @Test
     @Ignore
     public void should_get_service_instances_by_name() {
-        String projectName = "Default";
-        String serviceName = "go-agent16-9-0-dind";
-
-        List<ServiceInstance> response = rancherClient.serviceInstancesByName(projectName, serviceName);
+        List<ServiceInstance> response = rancherClient.serviceInstancesByName(STR_ENV_DEFAULT, STR_SERVICE_NAME);
         try {
             System.out.println(new ObjectMapper().writer().writeValueAsString(response));
         } catch (JsonProcessingException e) {
@@ -92,11 +104,9 @@ public class RancherImplTest {
     @Test
     @Ignore
     public void should_get_service_info_by_name() {
-        String projectName = "Default";
-        String serviceName = "go-agent16-9-0-dind";
-        ServiceInfo serviceInfo = rancherClient.serviceInfoByName(projectName, serviceName);
+        ServiceInfo serviceInfo = rancherClient.serviceInfoByName(STR_ENV_DEFAULT, STR_SERVICE_NAME);
         assertNotNull(serviceInfo);
-        assertEquals(serviceName, serviceInfo.getName());
+        assertEquals(STR_CONTAINER_NAME, serviceInfo.getName());
     }
 
 }

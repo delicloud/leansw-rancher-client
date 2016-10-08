@@ -12,6 +12,8 @@ public interface RancherClient {
 
     List<ServiceInstance> serviceInstancesByName(String projectName, String serviceName);
 
+    ServiceInstance instance(String projectName, String serviceName, String containerName, int index);
+
     List<ProjectInfo> projects();
 
     ProjectInfo projectByName(String projectName);
@@ -22,8 +24,13 @@ public interface RancherClient {
 
     List<EnvironmentInfo> environmentsByProjectName(String projectName);
 
+    List<EnvironmentInfo> environmentsByProjectId(String projectId);
+
     EnvironmentInfo environmentInfoByName(String projectName, String environmentName);
+
+    EnvironmentInfo environmentInfoById(String projectId, String environmentId);
 
     List<ServiceInfo> servicesByEnvironmentName(String projectName, String environmentName);
 
+    List<ServiceInstance> instanceByExtPrefix(String strEnvDefault, String strServiceName, String extPrefix);
 }

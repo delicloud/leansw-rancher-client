@@ -9,7 +9,6 @@ import com.thoughtworks.lean.rancher.dto.*;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,9 +18,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PUT;
@@ -29,12 +28,15 @@ import static org.springframework.http.HttpMethod.PUT;
 @Component
 public class RancherClientImpl implements RancherClient {
     private final static String URL_PROJECT_ENVIRONMENTS = "%s/v1/projects/%s/environments";
+    private final static String URL_PROJECT_ENVIRONMENT = "%s/v1/projects/%s/environments/%s";
     private final static String URL_PROJECT_ENVIRONMENT_SERVICES = "%s/v1/projects/%s/environments/%s/services";
     private final static String URL_PROJECT_SERVICES_BY_NAME = "%s/v1/projects/%s/services?name=%s";
     private final static String URL_PROJECT_SERVICE = "%s/v1/projects/%s/services/%s";
     private final static String URL_PROJECT_SERVICE_INSTANCES = "%s/v1/projects/%s/services/%s/instances";
-    private final static String URL_PROJECT_SERVICE_INSTANCE = "%s/v1/projects/%s/instances/%s";
+    private final static String URL_PROJECT_SERVICE_INSTANCE = "%s/v1/projects/%s/containers/%s";
     private final static String URL_PROJECTS = "%s/v1/projects";
+
+    private final static String TMPL_INSTANCE_NAME = "%s_%s_%d";
 
     private String accessSecret;
     private String secretKey;
@@ -64,12 +66,9 @@ public class RancherClientImpl implements RancherClient {
 
     @Override
     public List<ProjectInfo> projects() {
-        return get(String.format(URL_PROJECTS, rancherUrl), new TypeReference<List<ProjectInfo>>() {
-            @Override
-            public Type getType() {
-                return super.getType();
-            }
-        });
+        return get(String.format(URL_PROJECTS, rancherUrl),
+                new TypeReference<List<ProjectInfo>>() {
+                }, true);
     }
 
     @Override
@@ -83,38 +82,67 @@ public class RancherClientImpl implements RancherClient {
     }
 
     @Override
+    public ServiceInstance instance(String projectName, String serviceName, String containerName, int index) {
+        ServiceInfo serviceInfo = serviceInfoByName(projectName, serviceName);
+        List<ServiceInstance> serviceInstances = serviceInstances(serviceInfo.getAccountId(), serviceInfo.getId());
+        EnvironmentInfo envInfo = environmentInfoById(serviceInfo.getAccountId(), serviceInfo.getEnvironmentId());
+        return serviceInstances.stream().filter((serviceInstance -> serviceInstance.getName().equals(String.format(TMPL_INSTANCE_NAME, envInfo.getName(), serviceName, index)))).findFirst().orElse(null);
+    }
+
+    @Override
+    public List<ServiceInstance> instanceByExtPrefix(String projectName, String serviceName, String extPrefix) {
+        ServiceInfo serviceInfo = serviceInfoByName(projectName, serviceName);
+        List<ServiceInstance> serviceInstances = serviceInstances(serviceInfo.getAccountId(), serviceInfo.getId());
+        return serviceInstances.stream().filter(serviceInstance -> serviceInstance.getExternalId().startsWith(extPrefix)).collect(Collectors.toList());
+    }
+
+    @Override
     public List<EnvironmentInfo> environmentsByProjectName(String projectName) {
-        ProjectInfo projectInfo = projectByName(projectName);
-        return get(String.format(URL_PROJECT_ENVIRONMENTS, rancherUrl, projectInfo.getId()), new TypeReference<List<EnvironmentInfo>>() {
-            @Override
-            public Type getType() {
-                return super.getType();
-            }
-        });
+        return environmentsByProjectId(projectByName(projectName).getId());
+    }
+
+    @Override
+    public List<EnvironmentInfo> environmentsByProjectId(String projectId) {
+        return get(String.format(URL_PROJECT_ENVIRONMENTS, rancherUrl, projectId),
+                new TypeReference<List<EnvironmentInfo>>() {
+                }, true);
     }
 
     @Override
     public EnvironmentInfo environmentInfoByName(String projectName, String environmentName) {
-        return this.environmentsByProjectName(projectName).stream()
-                .filter(environmentInfo -> environmentInfo.getName().equals(environmentName))
+        ProjectInfo projectInfo = projectByName(projectName);
+        return this.environmentsByProjectName(projectInfo.getName()).stream()
+                .filter((environmentInfo) -> environmentInfo.getName().equals(environmentName))
                 .findFirst().orElse(null);
+    }
+
+    @Override
+    public EnvironmentInfo environmentInfoById(String projectId, String environmentId) {
+        return get(String.format(URL_PROJECT_ENVIRONMENT, rancherUrl, projectId, environmentId),
+                new TypeReference<EnvironmentInfo>() {
+                }, false);
     }
 
     @Override
     public List<ServiceInfo> servicesByEnvironmentName(String projectName, String environmentName) {
         ProjectInfo projectInfo = this.projectByName(projectName);
         EnvironmentInfo environmentInfo = this.environmentInfoByName(projectName, environmentName);
-        return get(String.format(URL_PROJECT_ENVIRONMENT_SERVICES, rancherUrl, projectInfo.getId(), environmentInfo.getId())
-                , new TypeReference<List<ServiceInfo>>(){});
+        return get(String.format(URL_PROJECT_ENVIRONMENT_SERVICES, rancherUrl, projectInfo.getId(), environmentInfo.getId()),
+                new TypeReference<List<ServiceInfo>>() {
+                }, true);
     }
 
-    private <T> T get(String url,TypeReference<T> tTypeReference) {
+
+    private <T> T get(String url, TypeReference<T> tTypeReference, boolean list) {
         HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
-        ResponseEntity<String> response = this.restTemplate.exchange(url, GET, request, new ParameterizedTypeReference<String>() {
-        });
+        ResponseEntity<String> response = this.restTemplate.exchange(url, GET, request, String.class);
         try {
-            JsonNode node = objectMapper.reader().readTree(response.getBody()).get("data");
-            return objectMapper.readerFor(tTypeReference).readValue(node.toString());
+            if (list) {
+                JsonNode node = objectMapper.reader().readTree(response.getBody()).get("data");
+                return objectMapper.readerFor(tTypeReference).readValue(node.toString());
+            } else {
+                return objectMapper.readerFor(tTypeReference).readValue(response.getBody());
+            }
         } catch (IOException e) {
             return null;
         }
@@ -124,8 +152,9 @@ public class RancherClientImpl implements RancherClient {
     @Override
     public ServiceInfo serviceInfoByName(String projectName, String serviceName) {
         ProjectInfo projectInfo = projectByName(projectName);
-        List<ServiceInfo> response = get(String.format(URL_PROJECT_SERVICES_BY_NAME, rancherUrl, projectInfo.getId(), serviceName)
-                , new TypeReference<List<ServiceInfo>>() {});
+        List<ServiceInfo> response = get(String.format(URL_PROJECT_SERVICES_BY_NAME, rancherUrl, projectInfo.getId(), serviceName),
+                new TypeReference<List<ServiceInfo>>() {
+                }, true);
         assert response != null;
         return response.stream().findFirst().orElse(null);
     }
@@ -169,12 +198,9 @@ public class RancherClientImpl implements RancherClient {
 
     @Override
     public List<ServiceInstance> serviceInstances(String projectId, String serviceId) {
-        return get(String.format(URL_PROJECT_SERVICE_INSTANCES, rancherUrl, projectId, serviceId), new TypeReference<List<ServiceInstance>>() {
-            @Override
-            public Type getType() {
-                return super.getType();
-            }
-        });
+        return get(String.format(URL_PROJECT_SERVICE_INSTANCES, rancherUrl, projectId, serviceId),
+                new TypeReference<List<ServiceInstance>>() {
+                }, true);
     }
 
     @Override
