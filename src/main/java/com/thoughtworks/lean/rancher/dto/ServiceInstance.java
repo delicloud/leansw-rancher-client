@@ -1,5 +1,8 @@
 package com.thoughtworks.lean.rancher.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceInstance {
     private String externalId;
     private String state;

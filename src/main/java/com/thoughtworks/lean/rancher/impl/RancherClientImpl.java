@@ -1,5 +1,9 @@
 package com.thoughtworks.lean.rancher.impl;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.lean.rancher.RancherClient;
 import com.thoughtworks.lean.rancher.dto.*;
 import org.apache.commons.codec.binary.Base64;
@@ -14,6 +18,8 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +43,8 @@ public class RancherClientImpl implements RancherClient {
 
     private RestTemplate restTemplate;
     private int TIMEOUT = 5000;
+    private ObjectMapper objectMapper = new ObjectMapper()
+            .configure(JsonParser.Feature.IGNORE_UNDEFINED, true);
 
 
     @Autowired
@@ -56,7 +64,12 @@ public class RancherClientImpl implements RancherClient {
 
     @Override
     public List<ProjectInfo> projects() {
-        return get(String.format(URL_PROJECTS, rancherUrl));
+        return get(String.format(URL_PROJECTS, rancherUrl), new TypeReference<List<ProjectInfo>>() {
+            @Override
+            public Type getType() {
+                return super.getType();
+            }
+        });
     }
 
     @Override
@@ -72,7 +85,12 @@ public class RancherClientImpl implements RancherClient {
     @Override
     public List<EnvironmentInfo> environmentsByProjectName(String projectName) {
         ProjectInfo projectInfo = projectByName(projectName);
-        return get(String.format(URL_PROJECT_ENVIRONMENTS, rancherUrl, projectInfo.getId()));
+        return get(String.format(URL_PROJECT_ENVIRONMENTS, rancherUrl, projectInfo.getId()), new TypeReference<List<EnvironmentInfo>>() {
+            @Override
+            public Type getType() {
+                return super.getType();
+            }
+        });
     }
 
     @Override
@@ -86,21 +104,29 @@ public class RancherClientImpl implements RancherClient {
     public List<ServiceInfo> servicesByEnvironmentName(String projectName, String environmentName) {
         ProjectInfo projectInfo = this.projectByName(projectName);
         EnvironmentInfo environmentInfo = this.environmentInfoByName(projectName, environmentName);
-        return get(String.format(URL_PROJECT_ENVIRONMENT_SERVICES, rancherUrl, projectInfo.getId(), environmentInfo.getId()));
+        return get(String.format(URL_PROJECT_ENVIRONMENT_SERVICES, rancherUrl, projectInfo.getId(), environmentInfo.getId())
+                , new TypeReference<List<ServiceInfo>>(){});
     }
 
-    private <T> T get(String url) {
+    private <T> T get(String url,TypeReference<T> tTypeReference) {
         HttpEntity<String> request = new HttpEntity<>(buildHttpHeaders());
-        ResponseEntity<Response<T>> response = this.restTemplate.exchange(url, GET, request, new ParameterizedTypeReference<Response<T>>() {
+        ResponseEntity<String> response = this.restTemplate.exchange(url, GET, request, new ParameterizedTypeReference<String>() {
         });
-        return response.getBody().getData();
+        try {
+            JsonNode node = objectMapper.reader().readTree(response.getBody()).get("data");
+            return objectMapper.readerFor(tTypeReference).readValue(node.toString());
+        } catch (IOException e) {
+            return null;
+        }
     }
 
 
     @Override
     public ServiceInfo serviceInfoByName(String projectName, String serviceName) {
         ProjectInfo projectInfo = projectByName(projectName);
-        List<ServiceInfo> response = get(String.format(URL_PROJECT_SERVICES_BY_NAME, rancherUrl, projectInfo.getId(), serviceName));
+        List<ServiceInfo> response = get(String.format(URL_PROJECT_SERVICES_BY_NAME, rancherUrl, projectInfo.getId(), serviceName)
+                , new TypeReference<List<ServiceInfo>>() {});
+        assert response != null;
         return response.stream().findFirst().orElse(null);
     }
 
@@ -143,7 +169,12 @@ public class RancherClientImpl implements RancherClient {
 
     @Override
     public List<ServiceInstance> serviceInstances(String projectId, String serviceId) {
-        return get(String.format(URL_PROJECT_SERVICE_INSTANCES, rancherUrl, projectId, serviceId));
+        return get(String.format(URL_PROJECT_SERVICE_INSTANCES, rancherUrl, projectId, serviceId), new TypeReference<List<ServiceInstance>>() {
+            @Override
+            public Type getType() {
+                return super.getType();
+            }
+        });
     }
 
     @Override

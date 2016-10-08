@@ -1,7 +1,9 @@
 package com.thoughtworks.lean.rancher.dto;
 
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.Map;
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceInfo {
     private String id;
     private String accountId;
