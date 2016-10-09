@@ -10,6 +10,10 @@ public class ServiceInstance {
     private String name;
     private String accountId;
 
+    public boolean isSideKick() {
+        return name.split("_").length == 4;
+    }
+
     public String getName() {
         return name;
     }

@@ -57,6 +57,7 @@ public class RancherImplTest {
         assertEquals(serviceInfo.getName(), serviceName);
     }
 
+
     @Test
     @Ignore
     public void should_get_environment_by_name() {
@@ -88,7 +89,7 @@ public class RancherImplTest {
     public void should_stop_instance() {
         ServiceInstance instance = rancherClient.instance(STR_ENV_DEFAULT, STR_SERVICE_NAME, STR_CONTAINER_NAME, 2);
         instance = rancherClient.instanceActionById(instance.getAccountId(), instance.getId(), "stop", new InstanceStopAction());
-        assertEquals(instance.getState(),"stopping");
+        assertEquals(instance.getState(), "stopping");
     }
 
     @Test
@@ -96,7 +97,7 @@ public class RancherImplTest {
     public void should_start_instance() {
         ServiceInstance instance = rancherClient.instance(STR_ENV_DEFAULT, STR_SERVICE_NAME, STR_CONTAINER_NAME, 2);
         instance = rancherClient.instanceActionById(instance.getAccountId(), instance.getId(), "start", null);
-        assertEquals(instance.getState(),"starting");
+        assertEquals(instance.getState(), "starting");
     }
 
 
@@ -122,10 +123,31 @@ public class RancherImplTest {
 
     @Test
     @Ignore
+    public void should_get_service_instances_no_sidekick_by_name() {
+        List<ServiceInstance> response = rancherClient.serviceInstancesByName(STR_ENV_DEFAULT, STR_SERVICE_NAME, false);
+        try {
+            System.out.println(new ObjectMapper().writer().writeValueAsString(response));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        assertTrue(response.size() > 0);
+
+    }
+
+    @Test
+    @Ignore
     public void should_get_service_info_by_name() {
         ServiceInfo serviceInfo = rancherClient.serviceInfoByName(STR_ENV_DEFAULT, STR_SERVICE_NAME);
         assertNotNull(serviceInfo);
         assertEquals(STR_CONTAINER_NAME, serviceInfo.getName());
+    }
+
+
+    @Test
+    public void should_is_side_kick() {
+        ServiceInstance serviceInstance = new ServiceInstance();
+        serviceInstance.setName("kibana_nginx-proxy_1");
+        assertFalse(serviceInstance.isSideKick());
     }
 
 }

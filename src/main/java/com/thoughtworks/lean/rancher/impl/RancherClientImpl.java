@@ -236,8 +236,17 @@ public class RancherClientImpl implements RancherClient {
 
     @Override
     public List<ServiceInstance> serviceInstancesByName(String projectName, String serviceName) {
+        return serviceInstancesByName(projectName, serviceName, true);
+    }
+
+
+    @Override
+    public List<ServiceInstance> serviceInstancesByName(String projectName, String serviceName, boolean withSideKick) {
         ServiceInfo serviceInfo = this.serviceInfoByName(projectName, serviceName);
-        return this.serviceInstances(serviceInfo.getAccountId(), serviceInfo.getId());
+        return this.serviceInstances(serviceInfo.getAccountId(), serviceInfo.getId())
+                .stream()
+                .filter(serviceInstance -> withSideKick || !serviceInstance.isSideKick())
+                .collect(Collectors.toList());
     }
 
 
