@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceInstance {
+    private String id;
     private String externalId;
     private String state;
     private String name;
+    private String accountId;
 
     public String getName() {
         return name;
@@ -35,10 +37,32 @@ public class ServiceInstance {
         return this;
     }
 
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public ServiceInstance setAccountId(String accountId) {
+        this.accountId = accountId;
+        return this;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public ServiceInstance setId(String id) {
+        this.id = id;
+        return this;
+    }
+
     @Override
     public String toString() {
         return "ServiceInstance{" +
-                "externalId='" + externalId + '\'' +
+                "id='" + id + '\'' +
+                ", externalId='" + externalId + '\'' +
+                ", state='" + state + '\'' +
+                ", name='" + name + '\'' +
+                ", accountId='" + accountId + '\'' +
                 '}';
     }
 }

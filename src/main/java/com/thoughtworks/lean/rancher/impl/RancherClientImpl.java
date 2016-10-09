@@ -1,11 +1,16 @@
 package com.thoughtworks.lean.rancher.impl;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.lean.rancher.RancherClient;
-import com.thoughtworks.lean.rancher.dto.*;
+import com.thoughtworks.lean.rancher.dto.EnvironmentInfo;
+import com.thoughtworks.lean.rancher.dto.ProjectInfo;
+import com.thoughtworks.lean.rancher.dto.ServiceInfo;
+import com.thoughtworks.lean.rancher.dto.ServiceInstance;
+import com.thoughtworks.lean.rancher.dto.request.ServiceUpdateRequest;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,14 +21,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.PUT;
+import static org.springframework.http.HttpMethod.*;
+
 
 @Component
 public class RancherClientImpl implements RancherClient {
@@ -33,7 +39,9 @@ public class RancherClientImpl implements RancherClient {
     private final static String URL_PROJECT_SERVICES_BY_NAME = "%s/v1/projects/%s/services?name=%s";
     private final static String URL_PROJECT_SERVICE = "%s/v1/projects/%s/services/%s";
     private final static String URL_PROJECT_SERVICE_INSTANCES = "%s/v1/projects/%s/services/%s/instances";
-    private final static String URL_PROJECT_SERVICE_INSTANCE = "%s/v1/projects/%s/containers/%s";
+    private final static String URL_PROJECT_SERVICE_INSTANCE = "%s/v1/projects/%s/containers/%s/";
+    private final static String PARAM_KEY_ACTION = "action";
+
     private final static String URL_PROJECTS = "%s/v1/projects";
 
     private final static String TMPL_INSTANCE_NAME = "%s_%s_%d";
@@ -102,6 +110,16 @@ public class RancherClientImpl implements RancherClient {
     }
 
     @Override
+    public <B> ServiceInstance instanceActionById(String accountId, String id, String action, B body) {
+        return post(
+                UriComponentsBuilder.fromHttpUrl(String.format(URL_PROJECT_SERVICE_INSTANCE, rancherUrl, accountId, id)).queryParam(PARAM_KEY_ACTION, action).build().toUriString(),
+                body,
+                new TypeReference<ServiceInstance>() {
+                });
+    }
+
+
+    @Override
     public List<EnvironmentInfo> environmentsByProjectId(String projectId) {
         return get(String.format(URL_PROJECT_ENVIRONMENTS, rancherUrl, projectId),
                 new TypeReference<List<EnvironmentInfo>>() {
@@ -143,6 +161,22 @@ public class RancherClientImpl implements RancherClient {
             } else {
                 return objectMapper.readerFor(tTypeReference).readValue(response.getBody());
             }
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+
+    private <T, B> T post(String url, B body, TypeReference<T> tTypeReference) {
+        HttpEntity<String> request;
+        try {
+            request = new HttpEntity<>(body == null ? "{}" : objectMapper.writer().writeValueAsString(body), buildHttpHeaders());
+        } catch (JsonProcessingException e) {
+            request = new HttpEntity<>("{}", buildHttpHeaders());
+        }
+        ResponseEntity<String> response = this.restTemplate.exchange(url, POST, request, String.class);
+        try {
+            return objectMapper.readerFor(tTypeReference).readValue(response.getBody());
         } catch (IOException e) {
             return null;
         }

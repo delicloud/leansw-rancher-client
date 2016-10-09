@@ -7,6 +7,7 @@ import com.thoughtworks.lean.rancher.dto.EnvironmentInfo;
 import com.thoughtworks.lean.rancher.dto.ProjectInfo;
 import com.thoughtworks.lean.rancher.dto.ServiceInfo;
 import com.thoughtworks.lean.rancher.dto.ServiceInstance;
+import com.thoughtworks.lean.rancher.dto.request.InstanceStopAction;
 import com.thoughtworks.lean.rancher.impl.RancherClientImpl;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -80,6 +81,24 @@ public class RancherImplTest {
         assertNotNull(instance);
         assertEquals(instance.getName(), "leansw-go-agents_go-agent16-9-0-dind_1");
     }
+
+
+    @Test
+    @Ignore
+    public void should_stop_instance() {
+        ServiceInstance instance = rancherClient.instance(STR_ENV_DEFAULT, STR_SERVICE_NAME, STR_CONTAINER_NAME, 2);
+        instance = rancherClient.instanceActionById(instance.getAccountId(), instance.getId(), "stop", new InstanceStopAction());
+        assertEquals(instance.getState(),"stopping");
+    }
+
+    @Test
+    @Ignore
+    public void should_start_instance() {
+        ServiceInstance instance = rancherClient.instance(STR_ENV_DEFAULT, STR_SERVICE_NAME, STR_CONTAINER_NAME, 2);
+        instance = rancherClient.instanceActionById(instance.getAccountId(), instance.getId(), "start", null);
+        assertEquals(instance.getState(),"starting");
+    }
+
 
     @Test
     @Ignore

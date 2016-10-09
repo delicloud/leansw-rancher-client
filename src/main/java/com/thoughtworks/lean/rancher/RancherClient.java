@@ -4,7 +4,10 @@ import com.thoughtworks.lean.rancher.dto.*;
 
 import java.util.List;
 import java.util.Map;
-
+/**
+ * 需要注意这些API中的概念与RancherUI上的概念并不一致
+ *
+ */
 public interface RancherClient {
     ServiceInfo serviceInfoByName(String projectName, String serviceName);
 
@@ -33,4 +36,6 @@ public interface RancherClient {
     List<ServiceInfo> servicesByEnvironmentName(String projectName, String environmentName);
 
     List<ServiceInstance> instanceByExtPrefix(String strEnvDefault, String strServiceName, String extPrefix);
+
+    <B>ServiceInstance instanceActionById(String accountId, String id,String action,B body);
 }

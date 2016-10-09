@@ -1,4 +1,4 @@
-package com.thoughtworks.lean.rancher.dto;
+package com.thoughtworks.lean.rancher.dto.request;
 
 import java.util.Map;
 
