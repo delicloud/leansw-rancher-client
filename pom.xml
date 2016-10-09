@@ -88,14 +88,4 @@
         </dependency>
     </dependencies>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>libs-snapshot-local</id>
-            <url>http://artifactory.dev.twleansw.com:8081/artifactory/libs-snapshot-local</url>
-        </snapshotRepository>
-        <repository>
-            <id>libs-release-local</id>
-            <url>http://artifactory.dev.twleansw.com:8081/artifactory/libs-release-local</url>
-        </repository>
-    </distributionManagement>
 </project>
