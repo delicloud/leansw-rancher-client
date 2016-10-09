@@ -1,7 +1,6 @@
 package com.thoughtworks.lean.rancher.impl;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -168,14 +167,12 @@ public class RancherClientImpl implements RancherClient {
 
 
     private <T, B> T post(String url, B body, TypeReference<T> tTypeReference) {
-        HttpEntity<String> request;
+
         try {
+            HttpEntity<String> request;
             request = new HttpEntity<>(body == null ? "{}" : objectMapper.writer().writeValueAsString(body), buildHttpHeaders());
-        } catch (JsonProcessingException e) {
-            request = new HttpEntity<>("{}", buildHttpHeaders());
-        }
-        ResponseEntity<String> response = this.restTemplate.exchange(url, POST, request, String.class);
-        try {
+            ResponseEntity<String> response = this.restTemplate.exchange(url, POST, request, String.class);
+
             return objectMapper.readerFor(tTypeReference).readValue(response.getBody());
         } catch (IOException e) {
             return null;
