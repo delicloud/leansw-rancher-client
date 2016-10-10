@@ -91,6 +91,12 @@ public class RancherClientImpl implements RancherClient {
     }
 
     @Override
+    public ServiceInstance instanceById(String projectId, String instanceId) {
+        return get(URL_PROJECT_SERVICE_INSTANCE, new TypeReference<ServiceInstance>() {
+        }, false);
+    }
+
+    @Override
     public ServiceInstance instance(String projectName, String serviceName, String containerName, int index) {
         ServiceInfo serviceInfo = serviceInfoByName(projectName, serviceName);
         List<ServiceInstance> serviceInstances = serviceInstances(serviceInfo.getAccountId(), serviceInfo.getId());

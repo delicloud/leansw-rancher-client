@@ -26,6 +26,8 @@ public interface RancherClient {
 
     ServiceInstance instance(String projectName, String serviceName, String containerName, int index);
 
+    ServiceInstance instanceById(String projectId, String instanceId);
+
     List<ProjectInfo> projects();
 
     ProjectInfo projectByName(String projectName);
