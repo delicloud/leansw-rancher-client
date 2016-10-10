@@ -9,6 +9,8 @@ import com.thoughtworks.lean.rancher.dto.EnvironmentInfo;
 import com.thoughtworks.lean.rancher.dto.ProjectInfo;
 import com.thoughtworks.lean.rancher.dto.ServiceInfo;
 import com.thoughtworks.lean.rancher.dto.ServiceInstance;
+import com.thoughtworks.lean.rancher.dto.constants.ContainerAction;
+import com.thoughtworks.lean.rancher.dto.request.InstanceStopAction;
 import com.thoughtworks.lean.rancher.dto.request.ServiceUpdateRequest;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +122,21 @@ public class RancherClientImpl implements RancherClient {
     @Override
     public <B> ServiceInstance instanceAction(ServiceInstance instance, String action, B body) {
         return instanceActionById(instance.getAccountId(), instance.getId(), action, body);
+    }
+
+    @Override
+    public <B> ServiceInstance instanceStop(ServiceInstance instance, InstanceStopAction instanceStopAction) {
+        return instanceActionById(instance.getAccountId(), instance.getId(), ContainerAction.STOP, instanceStopAction);
+    }
+
+    @Override
+    public <B> ServiceInstance instanceStop(ServiceInstance instance) {
+        return instanceStop(instance, new InstanceStopAction());
+    }
+
+    @Override
+    public <B> ServiceInstance instanceStart(ServiceInstance instance) {
+        return instanceActionById(instance.getAccountId(), instance.getId(), ContainerAction.START, null);
     }
 
     @Override

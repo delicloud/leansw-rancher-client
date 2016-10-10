@@ -4,6 +4,7 @@ import com.thoughtworks.lean.rancher.dto.EnvironmentInfo;
 import com.thoughtworks.lean.rancher.dto.ProjectInfo;
 import com.thoughtworks.lean.rancher.dto.ServiceInfo;
 import com.thoughtworks.lean.rancher.dto.ServiceInstance;
+import com.thoughtworks.lean.rancher.dto.request.InstanceStopAction;
 
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,10 @@ public interface RancherClient {
     List<ServiceInstance> instanceByExtPrefix(String strEnvDefault, String strServiceName, String extPrefix);
 
     <B> ServiceInstance instanceActionById(String accountId, String id, String action, B body);
-
     <B> ServiceInstance instanceAction(ServiceInstance instance, String action, B body);
+    <B> ServiceInstance instanceStop(ServiceInstance instance);
+    <B> ServiceInstance instanceStop(ServiceInstance instance, InstanceStopAction instanceStopAction);
+    <B> ServiceInstance instanceStart(ServiceInstance instance);
+
 
 }
