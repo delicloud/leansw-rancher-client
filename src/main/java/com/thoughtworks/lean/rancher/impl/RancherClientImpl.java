@@ -92,8 +92,10 @@ public class RancherClientImpl implements RancherClient {
 
     @Override
     public ServiceInstance instanceById(String projectId, String instanceId) {
-        return get(URL_PROJECT_SERVICE_INSTANCE, new TypeReference<ServiceInstance>() {
-        }, false);
+        return get(String.format(URL_PROJECT_SERVICE_INSTANCE, rancherUrl, projectId, instanceId),
+                new TypeReference<ServiceInstance>() {
+                },
+                false);
     }
 
     @Override
