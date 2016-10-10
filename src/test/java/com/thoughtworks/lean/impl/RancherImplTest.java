@@ -3,10 +3,9 @@ package com.thoughtworks.lean.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.lean.rancher.RancherClient;
-import com.thoughtworks.lean.rancher.dto.EnvironmentInfo;
-import com.thoughtworks.lean.rancher.dto.ProjectInfo;
-import com.thoughtworks.lean.rancher.dto.ServiceInfo;
-import com.thoughtworks.lean.rancher.dto.ServiceInstance;
+import com.thoughtworks.lean.rancher.dto.*;
+import com.thoughtworks.lean.rancher.dto.constants.ContainerAction;
+import com.thoughtworks.lean.rancher.dto.constants.ContainerStatus;
 import com.thoughtworks.lean.rancher.dto.request.InstanceStopAction;
 import com.thoughtworks.lean.rancher.impl.RancherClientImpl;
 import org.junit.Before;
@@ -88,16 +87,16 @@ public class RancherImplTest {
     @Ignore
     public void should_stop_instance() {
         ServiceInstance instance = rancherClient.instance(STR_ENV_DEFAULT, STR_SERVICE_NAME, STR_CONTAINER_NAME, 2);
-        instance = rancherClient.instanceActionById(instance.getAccountId(), instance.getId(), "stop", new InstanceStopAction());
-        assertEquals(instance.getState(), "stopping");
+        instance = rancherClient.instanceActionById(instance.getAccountId(), instance.getId(), ContainerAction.START, new InstanceStopAction());
+        assertEquals(instance.getState(), ContainerStatus.STOPPING);
     }
 
     @Test
     @Ignore
     public void should_start_instance() {
         ServiceInstance instance = rancherClient.instance(STR_ENV_DEFAULT, STR_SERVICE_NAME, STR_CONTAINER_NAME, 2);
-        instance = rancherClient.instanceActionById(instance.getAccountId(), instance.getId(), "start", null);
-        assertEquals(instance.getState(), "starting");
+        instance = rancherClient.instanceActionById(instance.getAccountId(), instance.getId(), ContainerAction.STOP, null);
+        assertEquals(instance.getState(), ContainerStatus.STARTING);
     }
 
 

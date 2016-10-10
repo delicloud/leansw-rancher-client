@@ -16,6 +16,8 @@ public interface RancherClient {
 
     List<ServiceInstance> serviceInstances(String projectId, String serviceId);
 
+    List<ServiceInstance> serviceInstances(String projectId, String serviceId, boolean withSideKick);
+
     List<ServiceInstance> serviceInstancesByName(String projectName, String serviceName);
 
     List<ServiceInstance> serviceInstancesByName(String projectName, String serviceName, boolean withSideKick);
@@ -44,4 +46,7 @@ public interface RancherClient {
     List<ServiceInstance> instanceByExtPrefix(String strEnvDefault, String strServiceName, String extPrefix);
 
     <B> ServiceInstance instanceActionById(String accountId, String id, String action, B body);
+
+    <B> ServiceInstance instanceAction(ServiceInstance instance, String action, B body);
+
 }

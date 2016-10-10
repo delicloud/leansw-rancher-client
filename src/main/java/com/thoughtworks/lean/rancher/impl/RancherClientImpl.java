@@ -117,6 +117,10 @@ public class RancherClientImpl implements RancherClient {
                 });
     }
 
+    @Override
+    public <B> ServiceInstance instanceAction(ServiceInstance instance, String action, B body) {
+        return instanceActionById(instance.getAccountId(), instance.getId(), action, body);
+    }
 
     @Override
     public List<EnvironmentInfo> environmentsByProjectId(String projectId) {
@@ -235,6 +239,15 @@ public class RancherClientImpl implements RancherClient {
     }
 
     @Override
+    public List<ServiceInstance> serviceInstances(String projectId, String serviceId, boolean withSideKick) {
+        return this.serviceInstances(projectId, serviceId)
+                .stream()
+                .filter(serviceInstance -> withSideKick || !serviceInstance.isSideKick())
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
     public List<ServiceInstance> serviceInstancesByName(String projectName, String serviceName) {
         return serviceInstancesByName(projectName, serviceName, true);
     }
@@ -243,10 +256,7 @@ public class RancherClientImpl implements RancherClient {
     @Override
     public List<ServiceInstance> serviceInstancesByName(String projectName, String serviceName, boolean withSideKick) {
         ServiceInfo serviceInfo = this.serviceInfoByName(projectName, serviceName);
-        return this.serviceInstances(serviceInfo.getAccountId(), serviceInfo.getId())
-                .stream()
-                .filter(serviceInstance -> withSideKick || !serviceInstance.isSideKick())
-                .collect(Collectors.toList());
+        return this.serviceInstances(serviceInfo.getAccountId(), serviceInfo.getId(), withSideKick);
     }
 
 
