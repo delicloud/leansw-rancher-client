@@ -1,6 +1,7 @@
 package com.thoughtworks.lean.rancher.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.thoughtworks.lean.rancher.dto.constants.ContainerStatus;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceInstance {
@@ -57,6 +58,14 @@ public class ServiceInstance {
     public ServiceInstance setId(String id) {
         this.id = id;
         return this;
+    }
+
+    public boolean isRunning() {
+        return this.getState().equalsIgnoreCase(ContainerStatus.RUNNING);
+    }
+
+    public boolean isStoped() {
+        return this.getState().equalsIgnoreCase(ContainerStatus.STOPED);
     }
 
     @Override
